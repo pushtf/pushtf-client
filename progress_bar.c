@@ -90,6 +90,7 @@ void	progress_bar(sfile_t *f)
 
   if (f->fh_cur_pos == filesize) {
     print_progress_bar(100, f->fh_cur_pos, 0, 0);
+    printf("\n");
   } 
   else 
     if (f->speedometer == 0 || tick >= f->pb_timer + 1)

@@ -42,9 +42,7 @@ static size_t post_read_callback(void *ptr, size_t size, size_t nmemb, void *use
   f->fh_cur_pos += rb;
   f->eof = rb;
 
-  if (!rb && !g_quiet)
-    printf("\n");
-  else
+  if (rb)
     progress_bar(f);
 
   return (rb);

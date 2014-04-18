@@ -53,7 +53,6 @@ int get (CURL *curl, char *id, char *output_filename)
     curl_easy_setopt(curl, CURLOPT_WRITEHEADER, &h);
 
     res = curl_easy_perform(curl);
-    printf("\n");
     curl_error(curl, res, &h);
   }
 
