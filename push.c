@@ -176,6 +176,10 @@ int push (CURL *curl, char *filename)
 
       curl_formfree(post);
     }
+
+    if (!g_quiet)
+      printf("\n");
+    
     printf("%s : %s/%s\n", filename, ADDR_BASE, f->id);
 
     /* always cleanup */

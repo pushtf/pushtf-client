@@ -13,8 +13,8 @@
 #ifndef PUSHTF_CLI_H
 #define PUSHTF_CLI_H
 
-#define VERSION		"1.0-beta-13"
-#define USERAGENT	"pushtf-client/1.0-beta-13"
+#define VERSION		"1.0-beta-14"
+#define USERAGENT	"pushtf-client/1.0-beta-14"
 #define ADDR_BASE	"http://push.tf"
 #define ADDR_ID		"http://push.tf/id"
 #define ADDR_UPLOAD	"http://u.push.tf"

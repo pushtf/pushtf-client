@@ -56,6 +56,9 @@ int get (CURL *curl, char *id, char *output_filename)
     curl_error(curl, res, &h);
   }
 
+  if (!g_quiet)
+    printf("\n");
+
   if (!output_filename || strcmp(output_filename, "-")) {
     if (output_filename && strlen(output_filename)) {
       if (rename(id, output_filename) == -1) {
