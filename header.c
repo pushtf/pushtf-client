@@ -22,8 +22,12 @@ size_t get_header(void *ptr, size_t size, size_t nmemb, void *userdata)
     free_str = 0;
   }
 
+#if defined(__i386__) || defined(__arm__)
+  if (sscanf(buffer, "Content-length: %llu", &h->content_length) == 1) {
+#else
   if (sscanf(buffer, "Content-length: %lu", &h->content_length) == 1) {
-    //
+#endif
+      //
   }
 
   if (free_str)

@@ -63,7 +63,11 @@ static struct curl_httppost* post_formadd(sfile_t *f, char *filename)
 		CURLFORM_COPYCONTENTS, f->token,
 		CURLFORM_END);
    if (f->fh_st_pos > 0) {
+#if defined(__i386__) || defined(__arm__)
+     sprintf(seek, "%lld", f->fh_st_pos);
+#else
      sprintf(seek, "%ld", f->fh_st_pos);
+#endif
      curl_formadd(&post, &last,
 		  CURLFORM_COPYNAME, "seek",
 		  CURLFORM_COPYCONTENTS, seek,

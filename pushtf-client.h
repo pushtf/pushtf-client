@@ -29,7 +29,7 @@ extern char g_quiet;
 typedef struct {
   char			*status_code;
   char			*filename;
-  unsigned long		content_length;
+  off_t 		content_length;
 } sheader_fields_t;
 
 typedef struct {

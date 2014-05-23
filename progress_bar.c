@@ -54,7 +54,11 @@ static void print_progress_bar(int percent, off_t pos, unsigned long speed, time
   for (; i++ < progress_bar_length; printf(" "));
   
   if (percent == 100) {
+#if defined(__i386__) || defined(__arm__)
+    printf("] %llu bytes", pos);
+#else
     printf("] %lu bytes", pos);
+#endif
   } else {
     
     bytes_to_unit(&h, pos);
@@ -106,7 +110,11 @@ void	progress_bar(sfile_t *f)
 			     (filesize - f->fh_cur_pos) / speed);
 	} else {
 	  bytes_to_unit(&h, speed);
-	  printf("\033[2K\r%lu bytes - %.0f %s/s", f->fh_cur_pos, h.b, h.unit);
+#if defined(__i386__) || defined(__arm__)
+	  printf("\033[2K\r%llu bytes - %.0f %s/s", f->fh_cur_pos, h.b, h.unit);
+#else
+	  printf("\033[2K\r%llu bytes - %.0f %s/s", f->fh_cur_pos, h.b, h.unit);
+#endif
 	}
       }
 }

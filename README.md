@@ -4,12 +4,12 @@ Command line client for push.tf cloud storage service.
 
 
 ### Development
-Developement is in beta stage and a many features are still in the pipe.
+Developement is in beta stage and many features are still in the pipe.
 
 
 ### Compilation
 ```shell
-gcc *.c -Wall -lcurl -o pushtf
+gcc *.c -D_FILE_OFFSET_BITS=64 -Wall -lcurl -o pushtf
 ```
 This tool depends of [libcurl](http://http://curl.haxx.se/libcurl). It compiles (at least once) under Linux x86 (32/64 bit), Raspberry Pi, Mac OSX (Tiger, Snow Leopard), FreeBSD.
 
@@ -70,7 +70,7 @@ $ tar zcf - directory | pushtf -
 (null) : http://push.tf/8059
 ```
 
-#### Send data in a pipe
+#### Send retrieved data in a pipe
 ```shell
 $ pushtf -g 8059 -o - | tar zxf -
 ```
