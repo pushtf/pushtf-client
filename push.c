@@ -8,7 +8,7 @@ static size_t get_id(void *ptr, size_t size, size_t nmemb, void *userp)
   f->id = calloc((++len), sizeof(char));
   f->token = calloc((len), sizeof(char));
 
-  if (sscanf(ptr, "%[0-9]:%s\r\n", f->id, f->token) != 2) {
+  if (sscanf(ptr, "%[A-Za-z0-9]:%s\r\n", f->id, f->token) != 2) {
     fprintf(stderr, "Unable to get file id.\n");
     exit(EXIT_FAILURE);
   }
@@ -63,7 +63,7 @@ static struct curl_httppost* post_formadd(sfile_t *f, char *filename)
 		CURLFORM_COPYCONTENTS, f->token,
 		CURLFORM_END);
    if (f->fh_st_pos > 0) {
-#if defined(__i386__) || defined(__arm__)
+#if defined(__i386__) || defined(__arm__) || defined(__APPLE__)
      sprintf(seek, "%lld", f->fh_st_pos);
 #else
      sprintf(seek, "%ld", f->fh_st_pos);
@@ -81,13 +81,59 @@ static struct curl_httppost* post_formadd(sfile_t *f, char *filename)
    return (post);
 }
 
-int push (CURL *curl, char *filename)
+char *get_get_id_url(char hardened, char *maxdl, char *expiration)
+{
+  char *parameters;
+  char *param_t[3];
+  char *url;
+  int param_p = 0;
+  int i;
+
+  if (hardened) {
+    param_t[param_p] = malloc(strlen("mode=hardened") + 1);
+    strcpy(param_t[param_p++], "mode=hardened");
+  }
+  if (maxdl) {
+    param_t[param_p] = malloc(strlen("maxdl=") + strlen(maxdl) + 1);
+    strcpy(param_t[param_p], "maxdl=");
+    strcat(param_t[param_p++], maxdl);
+  }
+  if (expiration) {
+    param_t[param_p] = malloc(strlen("expiration=") + strlen(expiration) + 1);
+    strcpy(param_t[param_p], "expiration=");
+    strcat(param_t[param_p++], expiration);
+  }
+
+  parameters = malloc(2);
+  strcpy(parameters, "?");
+  for (i = 0; i < param_p; i++) {
+    parameters = realloc(parameters, strlen(parameters) +
+			 strlen(param_t[i]) + 1 + (i ? 1 : 0));
+    if (i)
+      strcat(parameters, "&");
+    strcat(parameters, param_t[i]);
+    free(param_t[i]);
+  }
+
+  url = malloc(strlen(ADDR_ID) + 1);
+  strcpy(url, ADDR_ID);
+  if (param_p) {
+    url = realloc(url, strlen(url) + strlen(parameters) + 1);
+    strcat(url, parameters);
+  }
+  free(parameters);
+
+  return (url);
+}
+
+int push (CURL *curl, char *filename, char hardened, char *maxdl, char *expiration)
 {
   CURLcode res;
   struct curl_httppost* post = NULL;
   struct curl_slist *chunk = NULL;
   sfile_t *f;
   sheader_fields_t h;
+  char *id_url;
 
   f = malloc(sizeof(sfile_t));
   memset(&h, 0, sizeof(sheader_fields_t));
@@ -108,9 +154,14 @@ int push (CURL *curl, char *filename)
   }
 
   if (curl) {
-    curl_config(curl, ADDR_ID);
 
     /***** GET ID *****/
+    id_url = get_get_id_url(hardened, maxdl, expiration);
+    if (g_debug)
+      printf("id url : %s\n", id_url);
+
+    curl_config(curl, id_url);
+
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, get_id);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
 
@@ -120,11 +171,13 @@ int push (CURL *curl, char *filename)
     res = curl_easy_perform(curl);
     curl_error(curl, res, &h);
 
+    free(id_url);
+
     if (g_verbose) {
       printf("--> ID: %s\n", f->id);
       printf("--> TOKEN: %s\n", f->token);
     }
-    
+
     /** RESET **/
     curl_easy_reset(curl);
     memset(&h, 0, sizeof(sheader_fields_t));
@@ -183,7 +236,7 @@ int push (CURL *curl, char *filename)
 
     if (!g_quiet)
       printf("\n");
-    
+
     printf("%s : %s/%s\n", filename, ADDR_BASE, f->id);
 
     /* always cleanup */

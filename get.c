@@ -12,7 +12,7 @@ static size_t get_file(void *ptr, size_t size, size_t nmemb, void *userp)
 
   f->fh_cur_pos += rb;
   progress_bar(f);
-  
+
   return (rb);
 }
 
@@ -45,7 +45,7 @@ int get (CURL *curl, char *id, char *output_filename)
     /* setup redirection capabilities */
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 3);
-      
+
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, get_file);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &sfile);
 

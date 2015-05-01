@@ -13,8 +13,8 @@
 #ifndef PUSHTF_CLI_H
 #define PUSHTF_CLI_H
 
-#define VERSION		"1.0-beta-14"
-#define USERAGENT	"pushtf-client/1.0-beta-14"
+#define VERSION		"1.0-beta-15"
+#define USERAGENT	"pushtf-client/1.0-beta-15"
 #define ADDR_BASE	"http://push.tf"
 #define ADDR_ID		"http://push.tf/id"
 #define ADDR_UPLOAD	"http://u.push.tf"
@@ -54,7 +54,7 @@ void	curl_error(CURL *curl, CURLcode res, sheader_fields_t *h);
 size_t	get_header(void *ptr, size_t size, size_t nmemb, void *userdata);
 void	free_sheader_fields(sheader_fields_t *s);
 int	get(CURL *curl, char *id, char *output_filename);
-int	push(CURL *curl, char *filename);
+int	push(CURL *curl, char *filename, char hardened, char *maxdl, char *expiration);
 void	progress_bar(sfile_t *f);
 
 #endif /* PUSHTF_CLI_H */

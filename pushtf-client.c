@@ -1,4 +1,5 @@
 #include <getopt.h>
+#include <ctype.h>
 #include "pushtf-client.h"
 
 char g_verbose	= 0;
@@ -51,6 +52,15 @@ void curl_error(CURL *curl, CURLcode res, sheader_fields_t *h)
   }
 }
 
+char validate_numeric_parameter(char *param)
+{
+  int i;
+  for (i = 0; param[i]; ++i)
+    if (!isdigit(param[i]))
+      return (1);
+  return (0);
+}
+
 void usage(const char *progname)
 {
   fprintf(stderr, "push.tf command line client\n"
@@ -58,10 +68,13 @@ void usage(const char *progname)
 	  "   %1$s [options] file_or_ID\n\n"
 	  "Options:\n"
 	  "  -d | --debug		debug mode\n"
+	  "  -e <expiration>	set file expiration in hours\n"
 	  "  -g | --get		get a file\n"
 	  "  -h | --help		this help\n"
+	  "  -m <value>		set file maximum downloads\n"
 	  "  -o <filename>		output filename w/ --get\n"
 	  "  -q | --quiet		quiet mode\n"
+	  "  -u			turn on hardened url mode\n"
 	  "  -v | --verbose	verbose mode\n"
 	  "  -V | --version	display components versions\n"
 	  "\n"
@@ -87,6 +100,9 @@ int main(int ac, char **av)
   int c;
   char get_f = 0;
   char *output_filename = 0;
+  char *expiration = 0;
+  char *maxdl = 0;
+  char hardened = 0;
 
   struct option longopts[] = {
     { "debug", 0, 0, 'd' },
@@ -98,13 +114,16 @@ int main(int ac, char **av)
     { NULL, 0, 0, 0 }
   };
 
-  while ((c = getopt_long(ac, av, "dvgVho:q",
+  while ((c = getopt_long(ac, av, "de:vgVhm:o:qu",
 			  longopts, NULL)) != -1)
     {
       switch (c)
 	{
 	case 'g':
 	  get_f = 1;
+	  break;
+	case 'e':
+	  expiration = optarg;
 	  break;
 	case 'v':
 	  printf("verbose mode: on\n");
@@ -120,11 +139,17 @@ int main(int ac, char **av)
 	case 'h':
 	  usage(av[0]);
 	  break;
+	case 'm':
+	  maxdl = optarg;
+	  break;
 	case 'o':
 	  output_filename = optarg;
 	  break;
 	case 'q':
 	  g_quiet = 1;
+	  break;
+	case 'u':
+	  hardened = 1;
 	  break;
 	default:
 	  usage(av[0]);
@@ -136,6 +161,16 @@ int main(int ac, char **av)
     usage(av[0]);
   }
 
+  if (maxdl && validate_numeric_parameter(maxdl)) {
+    printf("Error: maximum dowload parameter is not valid\n");
+    exit(1);
+  }
+
+  if (expiration && validate_numeric_parameter(expiration)) {
+    printf("Error: expiration parameter is not valid\n");
+    exit(1);
+  }
+
   setbuf(stdout, NULL);
 
   for (;optind < ac; optind++) {
@@ -143,7 +178,7 @@ int main(int ac, char **av)
     if (get_f)
       get(curl, av[optind], output_filename);
     else
-      push(curl, av[optind]);
+      push(curl, av[optind], hardened, maxdl, expiration);
   }
 
   exit(EXIT_SUCCESS);
