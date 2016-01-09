@@ -104,7 +104,7 @@ void	progress_bar(sfile_t *f)
 	f->speedometer = f->fh_cur_pos;
 
 	if (filesize) {
-	  percent = f->fh_cur_pos * 100 / filesize;
+	  percent = (int)(f->fh_cur_pos * 100 / filesize);
 	  
 	  print_progress_bar(percent, f->fh_cur_pos, speed,
 			     (filesize - f->fh_cur_pos) / speed);

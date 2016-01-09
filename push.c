@@ -3,7 +3,7 @@
 static size_t get_id(void *ptr, size_t size, size_t nmemb, void *userp)
 {
   sfile_t *f = (sfile_t *)userp;
-  int len = size * nmemb;
+  size_t len = size * nmemb;
 
   f->id = calloc((++len), sizeof(char));
   f->token = calloc((len), sizeof(char));
@@ -25,19 +25,18 @@ static size_t get_post_response(void *ptr, size_t size, size_t nmemb, void *user
 static size_t post_read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
 {
   sfile_t *f = (sfile_t *)userp;
-  int rb;
+  ssize_t rb;
 
   if (size * nmemb < 1)
     return (0);
 
   if (f->fh_cur_pos - f->fh_st_pos >= UPLOAD_SLICE)
     return (0);
-  
+
   rb = read(f->fd, ptr, (size * nmemb));
 
-  if (rb == -1) {
+  if (rb == -1)
     perror("read");
-  }
 
   f->fh_cur_pos += rb;
   f->eof = rb;
@@ -183,18 +182,19 @@ int push (CURL *curl, char *filename, char hardened, char *maxdl, char *expirati
     memset(&h, 0, sizeof(sheader_fields_t));
 
     /***** UPLOAD FILE *****/
-    curl_config(curl, ADDR_UPLOAD);
+    curl_easy_setopt(curl, CURLOPT_URL, ADDR_UPLOAD);
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
-
+      
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, post_read_callback);
     curl_easy_setopt(curl, CURLOPT_READDATA, f);
-
+      
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, get_post_response);
-
+      
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, get_header);
     curl_easy_setopt(curl, CURLOPT_WRITEHEADER, &h);
-
+      
     chunk = curl_slist_append(chunk, "Transfer-Encoding: chunked");
+    chunk = curl_slist_append(chunk, "Expect:");
     res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
 
     if (g_verbose) {
@@ -218,12 +218,13 @@ int push (CURL *curl, char *filename, char hardened, char *maxdl, char *expirati
     f->eof = 1;
 
     f->pb_timer = time(NULL);
-
+      
     while (f->eof > 0) {
 
       /* Create multipart form */
       post = post_formadd(f, filename ? filename : "stdin");
       curl_easy_setopt(curl, CURLOPT_HTTPPOST, post);
+      curl_easy_setopt(curl, CURLOPT_READFUNCTION, post_read_callback);
 
       /* Perform the request, res will get the return code */
       res = curl_easy_perform(curl);
@@ -233,6 +234,7 @@ int push (CURL *curl, char *filename, char hardened, char *maxdl, char *expirati
 
       curl_formfree(post);
     }
+    curl_slist_free_all(chunk);
 
     if (!g_quiet)
       printf("\n");

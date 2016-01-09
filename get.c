@@ -5,6 +5,9 @@ static size_t get_file(void *ptr, size_t size, size_t nmemb, void *userp)
   sfile_t *f = (sfile_t *)userp;
   int rb;
 
+  if (f->h->status_code != 200)
+    return(size * nmemb);
+
   rb = write(f->fd, ptr, (size * nmemb));
   if (rb == -1) {
     perror("output file");
@@ -16,12 +19,57 @@ static size_t get_file(void *ptr, size_t size, size_t nmemb, void *userp)
   return (rb);
 }
 
-int get (CURL *curl, char *id, char *output_filename)
+int get_free_filename(char *filename, char force)
+{
+  char *tmp_filename;
+  int i;
+
+  if (access(filename, F_OK) == -1 || force)
+    return (0);
+
+  tmp_filename = malloc(strlen(filename) + 6);
+  for (i = 1; i < 10000; i++) {
+    sprintf(tmp_filename, "%s.%i", filename, i);
+
+    if (access(tmp_filename, F_OK) < 0) {
+        filename = realloc(filename, strlen(tmp_filename) + 1);
+        strcpy(filename, tmp_filename);
+        free(tmp_filename);
+        return (0);
+    }
+  }
+
+  fprintf(stderr, "Unable to find free filename for %s\n", filename);
+  return (1);
+}
+
+int open_file(sfile_t *sfile, char *output_filename, char force)
+{
+  if (get_free_filename(output_filename, force))
+    return (1);
+
+  if ((sfile->fd = open(output_filename, O_WRONLY|O_CREAT|O_TRUNC, 0644)) == -1) {
+    perror(output_filename);
+    return(1);
+  }
+  return(0);
+}
+
+int get(CURL *curl, char *id, char *output_filename, char force)
 {
   CURLcode res;
   char *url;
+  char *tmp_filename = 0;
+  char *actual_output_filename = 0;
   sfile_t sfile;
   sheader_fields_t h;
+
+  if (output_filename && !strlen(output_filename)) {
+      fprintf(stderr, "Error: output filename can't be empty\n");
+      return (1);
+  }
+
+  tmp_filename = strdup(id);
 
   url = malloc((strlen(ADDR_BASE) + strlen(id) + 2) * sizeof(char));
   sprintf(url, "%s/%s", ADDR_BASE, id);
@@ -33,8 +81,7 @@ int get (CURL *curl, char *id, char *output_filename)
   if (output_filename && !strcmp(output_filename, "-")) {
     sfile.fd = 1;
     g_quiet = 1;
-  } else if ((sfile.fd = open(id, O_WRONLY|O_CREAT|O_TRUNC, 0644)) == -1) {
-    perror(id);
+  } else if (open_file(&sfile, tmp_filename, 0)) {
     curl_easy_cleanup(curl);
     exit(EXIT_FAILURE);
   }
@@ -56,29 +103,29 @@ int get (CURL *curl, char *id, char *output_filename)
     curl_error(curl, res, &h);
   }
 
-  if (!g_quiet)
-    printf("\n");
+  close(sfile.fd);
 
-  if (!output_filename || strcmp(output_filename, "-")) {
-    if (output_filename && strlen(output_filename)) {
-      if (rename(id, output_filename) == -1) {
-	perror("rename");
-      }
-      printf("filename : %s\n", output_filename);
-    } else if (h.filename && strlen(h.filename)) {
-      if (rename(id, h.filename) == -1) {
-	perror("rename");
-      }
-      printf("filename : %s\n", h.filename);
-    } else {
-      printf("filename : %s\n", id);
+  if (!g_quiet) printf("\n");
+
+  if (output_filename)
+    actual_output_filename = strdup(output_filename);
+  else if (!output_filename)
+    actual_output_filename = strdup(h.filename);
+
+  if (sfile.fd != 1 &&
+      !get_free_filename(actual_output_filename, force)) {
+    if (rename(tmp_filename, actual_output_filename) == -1) {
+        perror("rename");
+        fprintf(stderr, "filename should be: %s\n", tmp_filename);
     }
+    else if (!g_quiet)
+        printf("filename: %s\n", actual_output_filename);
   }
 
   free_sheader_fields(&h);
-  close(sfile.fd);
-
   free(url);
+  free(tmp_filename);
+  free(actual_output_filename);
 
   return (0);
 }

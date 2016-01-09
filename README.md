@@ -11,11 +11,11 @@ Developement is in beta stage and many features are still in the pipe.
 ```shell
 gcc *.c -D_FILE_OFFSET_BITS=64 -Wall -lcurl -o pushtf
 ```
-This tool depends of [libcurl](http://http://curl.haxx.se/libcurl). It compiles under Linux x86 (32/64 bit), Linux Armv7 (Raspberry Pi, Scaleway), Mac OSX (Tiger, Snow Leopard), FreeBSD.
+This tool depends of [libcurl](http://http://curl.haxx.se/libcurl). It compiles at least under Linux x86 (32/64 bit), Linux Armv7 (Raspberry Pi, Scaleway), Mac OSX (Tiger, Snow Leopard, Yosemite), FreeBSD...
 
 Pre-compiled standalone binaries are available on [push.tf](http://push.tf) :
 ```shell
-# Linux
+# Linux (64 bits)
 wget http://push.tf/linux/pushtf
 
 # Raspberry Pi
@@ -32,16 +32,17 @@ Usage:
    pushtf [options] file_or_ID
 
 Options:
-  -d | --debug		debug mode
-  -e <expiration>	set file expiration in hours
-  -g | --get		get a file
-  -h | --help		this help
-  -m <value>		set file maximum downloads
-  -o <filename>		output filename w/ --get
-  -q | --quiet		quiet mode
-  -u			turn on hardened url mode
-  -v | --verbose	verbose mode
-  -V | --version	display components versions
+-d | --debug       debug mode
+-e <expiration>    set file expiration in hours
+-f                 force file overwriting
+-g | --get         get a file
+-h | --help        this help
+-m <value>         set file maximum downloads
+-o <filename>      output filename w/ --get
+-q | --quiet       quiet mode
+-u                 turn on hardened url mode
+-v | --verbose     verbose mode
+-V | --version     display components versions
 
 Push files:
 pushtf FILE [FILE ..]
@@ -73,11 +74,38 @@ $ tar zcf - directory | pushtf -
 (null) : http://push.tf/8059
 ```
 
-#### Send retrieved data in a pipe
+#### Pipe retrieved data
 ```shell
 $ pushtf -g 8059 -o - | tar zxf -
 ```
 or
 ```shell
 $ curl -s http://push.tf/8059 | tar zxf -
+```
+
+#### Hardened url mode
+You can turn on hardened url mode with `-u` option. Instead of being random digits, ID is made of random alphanumeric characters. String length is also random.
+```shell
+$ pushtf -u /tmp/file
+100 % [****************************************************] 17347483 bytes
+/tmp/file : http://push.tf/aKGZAdaJnLJEDMT3rO
+```
+
+#### Maximum downloads limitation
+You can limit file downloads using `-m` option.
+```shell
+$ pushtf -m 2 /tmp/file
+100 % [****************************************************] 17347483 bytes
+/tmp/file : http://push.tf/74
+
+$ pushtf -g 74
+100 % [****************************************************] 17347483 bytes
+filename: file
+
+$ pushtf -g -f 74
+100 % [****************************************************] 17347483 bytes
+filename: file
+
+$ pushtf -g -f 74
+Error: 410 Gone
 ```

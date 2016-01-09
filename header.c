@@ -12,8 +12,8 @@ size_t get_header(void *ptr, size_t size, size_t nmemb, void *userdata)
   str = calloc((total_size + 1), sizeof(char));
   memcpy(buffer, ptr, total_size);
 
-  if (sscanf(buffer, "HTTP/1.1 %[^\r\n]", str) == 1) {
-    h->status_code = str;
+  if (sscanf(buffer, "HTTP/1.1 %i %[^\r\n]", &h->status_code, str) == 2) {
+    h->status_reason = str;
     free_str = 0;
   }
 
@@ -39,8 +39,8 @@ size_t get_header(void *ptr, size_t size, size_t nmemb, void *userdata)
 
 void free_sheader_fields(sheader_fields_t *s)
 {
-  if (s->status_code)
-    free(s->status_code);
+  if (s->status_reason)
+    free(s->status_reason);
   if (s->filename)
     free(s->filename);
 }

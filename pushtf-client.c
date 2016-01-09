@@ -35,20 +35,17 @@ void curl_error(CURL *curl, CURLcode res, sheader_fields_t *h)
     exit(EXIT_FAILURE);
   } else {
     curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
-    if (http_code == 200 && res != CURLE_ABORTED_BY_CALLBACK)
-      {
-	// Ok
-      }
-    else
-      {
-	if (h->status_code)
-	  fprintf(stderr, "Error: %s\n", h->status_code);
-	else
-	  fprintf(stderr, "Something goes wrong: error code %ld\n", http_code);
-	curl_easy_cleanup(curl);
-	free_sheader_fields(h);
-	exit(EXIT_FAILURE);
-      }
+    if (http_code == 200 && res != CURLE_ABORTED_BY_CALLBACK) {
+	     // Ok
+    } else {
+	     if (h->status_code)
+	       fprintf(stderr, "Error: %i %s\n", h->status_code, h->status_reason);
+	     else
+	       fprintf(stderr, "Something goes wrong: error code %ld\n", http_code);
+	     curl_easy_cleanup(curl);
+	     free_sheader_fields(h);
+	     exit(EXIT_FAILURE);
+    }
   }
 }
 
@@ -67,16 +64,17 @@ void usage(const char *progname)
 	  "Usage:\n"
 	  "   %1$s [options] file_or_ID\n\n"
 	  "Options:\n"
-	  "  -d | --debug		debug mode\n"
-	  "  -e <expiration>	set file expiration in hours\n"
-	  "  -g | --get		get a file\n"
-	  "  -h | --help		this help\n"
-	  "  -m <value>		set file maximum downloads\n"
-	  "  -o <filename>		output filename w/ --get\n"
-	  "  -q | --quiet		quiet mode\n"
-	  "  -u			turn on hardened url mode\n"
-	  "  -v | --verbose	verbose mode\n"
-	  "  -V | --version	display components versions\n"
+	  "  -d | --debug       debug mode\n"
+	  "  -e <expiration>    set file expiration in hours\n"
+	  "  -f                 force file overwriting\n"
+	  "  -g | --get         get a file\n"
+	  "  -h | --help        this help\n"
+	  "  -m <value>         set file maximum downloads\n"
+	  "  -o <filename>      output filename w/ --get\n"
+	  "  -q | --quiet       quiet mode\n"
+	  "  -u                 turn on hardened url mode\n"
+	  "  -v | --verbose     verbose mode\n"
+	  "  -V | --version     display components versions\n"
 	  "\n"
 	  "Push files:\n"
 	  "%1$s FILE [FILE ..]\n"
@@ -103,6 +101,7 @@ int main(int ac, char **av)
   char *expiration = 0;
   char *maxdl = 0;
   char hardened = 0;
+  char force = 0;
 
   struct option longopts[] = {
     { "debug", 0, 0, 'd' },
@@ -114,7 +113,7 @@ int main(int ac, char **av)
     { NULL, 0, 0, 0 }
   };
 
-  while ((c = getopt_long(ac, av, "de:vgVhm:o:qu",
+  while ((c = getopt_long(ac, av, "de:vgVhm:o:quf",
 			  longopts, NULL)) != -1)
     {
       switch (c)
@@ -151,6 +150,9 @@ int main(int ac, char **av)
 	case 'u':
 	  hardened = 1;
 	  break;
+	case 'f':
+	  force = 1;
+	  break;
 	default:
 	  usage(av[0]);
 	}
@@ -174,9 +176,10 @@ int main(int ac, char **av)
   setbuf(stdout, NULL);
 
   for (;optind < ac; optind++) {
+    curl_global_init(CURL_GLOBAL_ALL);
     curl = curl_easy_init();
     if (get_f)
-      get(curl, av[optind], output_filename);
+      get(curl, av[optind], output_filename, force);
     else
       push(curl, av[optind], hardened, maxdl, expiration);
   }
