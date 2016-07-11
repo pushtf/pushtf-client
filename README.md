@@ -8,6 +8,12 @@ Developement is in beta stage and many features are still in the pipe.
 
 
 ### Compilation
+Use the dedicated `Makefile` by running the command:
+```shell
+make
+```
+or, if you want to compile it by yourself, use:
+
 ```shell
 gcc *.c -D_FILE_OFFSET_BITS=64 -Wall -lcurl -o pushtf
 ```

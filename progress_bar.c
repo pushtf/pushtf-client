@@ -40,19 +40,22 @@ static void print_eta(time_t sec)
 
 static void print_progress_bar(int percent, off_t pos, unsigned long speed, time_t eta)
 {
+  int i;
   human_unit_t h;
   struct winsize w;
+  int progress_bar_length;
+  int prgbar_stars;
+
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-  int i;
-  
-  int progress_bar_length = w.ws_col - 7 - 38;
-  int prgbar_stars = (int)((percent * progress_bar_length) / 100);
+
+  progress_bar_length = w.ws_col - 7 - 38;
+  prgbar_stars = (int)((percent * progress_bar_length) / 100);
 
   printf("\033[2K\r%3d %% [", percent);
 
   for (i = 0; i++ < prgbar_stars; printf("*"));
   for (; i++ < progress_bar_length; printf(" "));
-  
+
   if (percent == 100) {
 #if defined(__i386__) || defined(__arm__) || defined(__APPLE__)
     printf("] %llu bytes", pos);
@@ -60,15 +63,15 @@ static void print_progress_bar(int percent, off_t pos, unsigned long speed, time
     printf("] %lu bytes", pos);
 #endif
   } else {
-    
+
     bytes_to_unit(&h, pos);
     printf("] %.3f %s", h.b, h.unit);
-    
+
     if (speed) {
       bytes_to_unit(&h, speed);
       printf(" - %.0f %s/s", h.b, h.unit);
     }
-    
+
     if (eta) {
       printf(" ETA ");
       print_eta(eta);
@@ -89,13 +92,13 @@ void	progress_bar(sfile_t *f)
 
   if (f->fd)
     filesize = f->st.st_size ? f->st.st_size : f->h->content_length;
-  
+
   tick = time(NULL);
 
   if (f->fh_cur_pos == filesize) {
     print_progress_bar(100, f->fh_cur_pos, 0, 0);
-  } 
-  else 
+  }
+  else
     if (f->speedometer == 0 || tick >= f->pb_timer + 1)
       {
 	f->pb_timer = time(NULL);
@@ -105,7 +108,7 @@ void	progress_bar(sfile_t *f)
 
 	if (filesize) {
 	  percent = (int)(f->fh_cur_pos * 100 / filesize);
-	  
+
 	  print_progress_bar(percent, f->fh_cur_pos, speed,
 			     (filesize - f->fh_cur_pos) / speed);
 	} else {
@@ -118,4 +121,3 @@ void	progress_bar(sfile_t *f)
 	}
       }
 }
-

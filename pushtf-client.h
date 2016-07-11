@@ -21,7 +21,7 @@
 
 #define UPLOAD_SLICE	1024000
 
-// global boolean
+/* global boolean */
 extern char g_verbose;
 extern char g_debug;
 extern char g_quiet;
@@ -40,7 +40,7 @@ typedef struct {
   struct stat		st;
   time_t		pb_timer;
   off_t			fh_cur_pos;
-  off_t			fh_st_pos; // position in the file at the beginning of the slice
+  off_t			fh_st_pos; /* position in the file at the beginning of the slice */
   unsigned long		eof;
   unsigned long		speedometer;
   sheader_fields_t	*h;
@@ -59,4 +59,3 @@ int	push(CURL *curl, char *filename, char hardened, char *maxdl, char *expiratio
 void	progress_bar(sfile_t *f);
 
 #endif /* PUSHTF_CLI_H */
-

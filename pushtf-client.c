@@ -36,7 +36,7 @@ void curl_error(CURL *curl, CURLcode res, sheader_fields_t *h)
   } else {
     curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
     if (http_code == 200 && res != CURLE_ABORTED_BY_CALLBACK) {
-	     // Ok
+        /* Ok */
     } else {
 	     if (h->status_code)
 	       fprintf(stderr, "Error: %i %s\n", h->status_code, h->status_reason);
@@ -159,7 +159,7 @@ int main(int ac, char **av)
     }
 
   if (optind == ac) {
-    // user forgot the input file
+    /* user forgot the input file */
     usage(av[0]);
   }
 
