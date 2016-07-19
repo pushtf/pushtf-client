@@ -27,7 +27,7 @@ size_t get_header(void *ptr, size_t size, size_t nmemb, void *userdata)
 #else
   if (sscanf(buffer, "Content-length: %lu", &h->content_length) == 1) {
 #endif
-      //
+      /* Silent block */
   }
 
   if (free_str)
