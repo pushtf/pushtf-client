@@ -10,9 +10,19 @@ Developement is in beta stage and many features are still in the pipe.
 ### Compilation
 Use the dedicated `Makefile` by running the command:
 ```shell
-make
+make && make clean
 ```
-or, if you want to compile it by yourself, use:
+
+If you want to install it on you file system, simply run:
+
+```shell
+make install
+```
+
+Note that it might require administrator privileges.
+
+
+If you want to compile it by yourself, use:
 
 ```shell
 gcc *.c -D_FILE_OFFSET_BITS=64 -Wall -lcurl -o pushtf
