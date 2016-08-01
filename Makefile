@@ -4,6 +4,8 @@ CC = gcc
 RM = rm -f
 CHECKSUM = md5sum
 INSTALL = install -m 0755
+SRC = $(wildcard *.c)
+OBJ = $(SRC:.c=.o)
 
 # Paths
 CHECKSUMFILE = $(BIN).md5
@@ -20,12 +22,12 @@ LDFLAGS = -lcurl
 all: $(BIN)
 
 # Rule: pushtf
-$(BIN): *.o
-	$(CC) *.c $(CFLAGS) $(LDFLAGS) -o $(BIN)
+$(BIN): $(OBJ)
+	$(CC) $^ $(CFLAGS) $(LDFLAGS) -o $(BIN)
 
 # Build objects
 %.o: %.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) -o $@ -c $< $(CFLAGS)
 
 # Rule: checksum
 checksum:
